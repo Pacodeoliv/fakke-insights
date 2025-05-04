@@ -17,7 +17,7 @@ default_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
-def generate_users():
+def generate_users(**context):
     fake = Faker('pt_BR')
     users = []
     
@@ -43,11 +43,14 @@ def generate_users():
         with open(output_path, 'rb') as f:
             return f.read()
 
-def upload_to_s3():
+def upload_to_s3(**context):
+    # Pegando o conteúdo do CSV da task anterior
+    csv_content = context['ti'].xcom_pull(task_ids='generate_users')
+    
     # Criando um arquivo temporário
     with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as temp_file:
         # Escrevendo o conteúdo do CSV no arquivo temporário
-        temp_file.write(generate_users())
+        temp_file.write(csv_content)
         temp_file.flush()
         
         # Configurando o cliente S3
@@ -60,6 +63,8 @@ def upload_to_s3():
         
         # Limpando o arquivo temporário
         os.unlink(temp_file.name)
+        
+        return f's3://{bucket_name}/{s3_key}'
 
 with DAG(
     'generate_upload_users',
@@ -69,7 +74,16 @@ with DAG(
     catchup=False
 ) as dag:
     
-    upload_task = PythonOperator(
+    generate_users_task = PythonOperator(
+        task_id='generate_users',
+        python_callable=generate_users,
+        provide_context=True
+    )
+    
+    upload_to_s3_task = PythonOperator(
         task_id='upload_to_s3',
-        python_callable=upload_to_s3
-    ) 
+        python_callable=upload_to_s3,
+        provide_context=True
+    )
+    
+    generate_users_task >> upload_to_s3_task 

@@ -11,13 +11,11 @@ Este projeto utiliza Apache Airflow para gerar dados de usuários falsos e fazer
 ```mermaid
 graph TD
     A[Airflow] --> B[Gerar Usuários]
-    B --> C[Salvar CSV]
-    C --> D[Upload S3]
+    B --> C[Upload S3]
     
     subgraph "Processo Diário"
         B -->|100 usuários| C
-        C -->|Arquivo Temporário| D
-        D -->|s3://fakke-insights/users/| E[(S3 Bucket)]
+        C -->|s3://fakke-insights/users/| D[(S3 Bucket)]
     end
 ```
 
@@ -77,7 +75,8 @@ fakke-insights/
 - **Descrição**: Gera 100 usuários falsos e faz upload para o S3
 - **Frequência**: Diária
 - **Tasks**:
-  1. `upload_to_s3`: Gera dados e faz upload para o S3
+  1. `generate_users`: Gera dados de usuários e retorna o conteúdo do CSV
+  2. `upload_to_s3`: Recebe o conteúdo do CSV e faz upload para o S3
 
 ## Contribuição
 
