@@ -6,6 +6,7 @@ from faker import Faker
 import boto3
 import os
 import tempfile
+import base64
 
 default_args = {
     'owner': 'airflow',
@@ -39,18 +40,20 @@ def generate_users(**context):
         output_path = os.path.join(temp_dir, 'users.csv')
         df.to_csv(output_path, index=False)
         
-        # Lendo o arquivo para retornar o conteúdo
+        # Lendo o arquivo e convertendo para string base64
         with open(output_path, 'rb') as f:
-            return f.read()
+            csv_bytes = f.read()
+            return base64.b64encode(csv_bytes).decode('utf-8')
 
 def upload_to_s3(**context):
     # Pegando o conteúdo do CSV da task anterior
-    csv_content = context['ti'].xcom_pull(task_ids='generate_users')
+    csv_base64 = context['ti'].xcom_pull(task_ids='generate_users')
+    csv_bytes = base64.b64decode(csv_base64)
     
     # Criando um arquivo temporário
     with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as temp_file:
         # Escrevendo o conteúdo do CSV no arquivo temporário
-        temp_file.write(csv_content)
+        temp_file.write(csv_bytes)
         temp_file.flush()
         
         # Configurando o cliente S3
