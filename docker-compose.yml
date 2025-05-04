@@ -24,7 +24,9 @@ services:
       - ./requirements.txt:/opt/airflow/requirements.txt
     command: >
       bash -c "
-        pip install --no-deps --no-cache-dir -r requirements.txt &&
+        mkdir -p /opt/airflow/data &&
+        chown -R ${AIRFLOW_UID:-50000}:0 /opt/airflow/data &&
+        pip install --user --no-cache-dir -r requirements.txt &&
         airflow db init &&
         airflow users create --username admin --firstname Admin --lastname User --role Admin --email admin@example.com --password admin &&
         (airflow webserver & airflow scheduler)

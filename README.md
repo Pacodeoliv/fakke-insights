@@ -16,7 +16,7 @@ graph TD
     
     subgraph "Processo Diário"
         B -->|100 usuários| C
-        C -->|data/YYYY-MM-DD/users.csv| D
+        C -->|Arquivo Temporário| D
         D -->|s3://fakke-insights/users/| E[(S3 Bucket)]
     end
 ```
@@ -33,7 +33,7 @@ graph TD
 
 1. Clone o repositório:
 ```bash
-git clone https://github.com/seu-usuario/fakke-insights.git
+git clone https://github.com/Pacodeoliv/fakke-insights.git
 cd fakke-insights
 ```
 
@@ -62,8 +62,6 @@ http://localhost:8080
 fakke-insights/
 ├── dags/                    # DAGs do Airflow
 │   └── generate_upload_users.py
-├── src/                     # Código fonte
-│   └── users.py
 ├── data/                    # Dados gerados
 ├── logs/                    # Logs do Airflow
 ├── plugins/                 # Plugins do Airflow
@@ -79,8 +77,7 @@ fakke-insights/
 - **Descrição**: Gera 100 usuários falsos e faz upload para o S3
 - **Frequência**: Diária
 - **Tasks**:
-  1. `generate_users`: Gera dados de usuários
-  2. `upload_to_s3`: Faz upload do arquivo CSV para o S3
+  1. `upload_to_s3`: Gera dados e faz upload para o S3
 
 ## Contribuição
 
